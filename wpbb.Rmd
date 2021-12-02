@@ -1,0 +1,109 @@
+---
+title: "Australian Womens Professional Basketball"
+author: "David Jackson"
+date: "12/1/2021"
+output: 
+  pdf_document: 
+    fig_width: 8
+    fig_height: 6
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(scales)
+library(dlookr)
+library(lubridate)
+library(wnblr)
+theme_set(theme_gray())
+```
+
+##  Australian: Women’s National Basketball League (WNBL)
+### Author and Source:
+* Author: Jacquie Tran
+ * Twitch: /jacquietran
+ * Github: https://github.com/jacquietran/wnblr
+
+### Box Scores
+ 
+ Team-level box scores, with all your usual basketball box score metrics like points scored, field goals made / attempted, free throws made / attempted, rebounds, turnovers, and the like.
+ 
+```{r}
+# devtools::install_github("jacquietran/wnblr")
+box_scores <- box_scores %>% 
+  janitor::remove_empty(which =c("rows","cols"))
+box_scores %>% dlookr::diagnose_numeric()
+
+```
+
+### Box Scores Detail: Players
+
+Player-level box scores.pbp
+
+```{r}
+box_scores_detailed <- box_scores_detailed  %>% 
+  janitor::remove_empty(which =c("rows","cols"))
+box_scores_detailed %>% dlookr::diagnose_numeric()
+  
+```
+
+### Play by Play
+
+Play-by-play data.
+
+```{r}
+pbp <- pbp  %>% 
+  janitor::remove_empty(which =c("rows","cols"))
+pbp %>% dlookr::diagnose_numeric()
+```
+
+### Shots data
+
+Primarily containing XY shot locations.
+
+```{r}
+shots <- shots  %>% 
+  janitor::remove_empty(which =c("rows","cols"))
+shots %>% dlookr::diagnose_numeric()
+```
+
+### Begin Analysis of  Team Level Box Scores
+
+```{r}
+box_scores %>% count(team_short_name,sort =T) %>%
+  ggplot(aes(x=reorder(team_short_name,n),y=n,fill=team_short_name)) + geom_col() + theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(title ="Total Games Played per Team: 2014 - 2020",
+       x="Team Name's",y="Number of Games Played")
+```
+
+```{r}
+box_scores %>% count(season,sort =T) %>%
+  ggplot(aes(x=season,y=n)) + geom_col() + 
+  labs(title ="Total Games By Year",
+       x="Season/Year",y="Total Games Played")
+```
+
+```{r}
+winner_margin <- box_scores %>% filter(team_result =="W") %>% group_by(season) %>%
+  summarise(
+    points_loss = mean(points_total_opp),
+    avg_points = mean(points_total),
+    avg_margin = mean(points_margin)
+  ) %>% ungroup()
+```
+```{r}
+winner_margin %>% ggplot( ) +
+  geom_point(aes(x=season,y=avg_points,size=avg_points,col ="Points winner")) + 
+  geom_point(aes(x=season,y=points_loss,size=avg_points,col ="Points Loss")) +
+  geom_smooth(aes(x=season,y=avg_points),method ="glm") +
+  geom_smooth(aes(x=season,y=points_loss),method ="glm") +
+  labs(title ="Average Points Scored by Winning and Losing Team by Year")
+```
+
+```{r}
+winner_margin %>% ggplot(aes(x=season,y=avg_margin,size=avg_margin,col =avg_margin )) +
+  geom_point() + geom_smooth(aes(x=season,y=avg_margin),method ="glm") +
+  labs(title ="Average Points Margin by Winning Team by Year")
+```
