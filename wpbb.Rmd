@@ -107,3 +107,50 @@ winner_margin %>% ggplot(aes(x=season,y=avg_margin,size=avg_margin,col =avg_marg
   geom_point() + geom_smooth(aes(x=season,y=avg_margin),method ="glm") +
   labs(title ="Average Points Margin by Winning Team by Year")
 ```
+
+## Totoal Scored by Winner + Losser
+
+
+```{r}
+box_scores$game_total <-  box_scores$points_total + box_scores$points_total_opp
+
+box_scores %>% group_by(season) %>%
+  summarise(Mean = mean(game_total)) %>%
+  ggplot(aes(x=season,y=Mean)) + geom_line() +
+  labs(title ="Average Total Points per game and season",
+       x="Season/Year",y="Average Points Per Game")
+```
+
+### Two Pointers Attempted vs Three Points Attempted
+
+```{r}
+box_scores %>% group_by(season) %>%
+  summarise(two_average = mean(two_pointers_attempted),
+            three_average = mean(three_pointers_attempted)) %>%
+  ggplot() + geom_line(aes(x=season,y=two_average,col="Two Pointers")) +
+   geom_line(aes(x=season,y=three_average,col="Three Pointers")) +
+  labs(title ="AVearge Two and Trees Shots Attempted by Season",
+       y=" Avearge Shots Attempted")
+```
+
+## Percentage of Two and Three Pointer Made
+
+```{r}
+box_scores$three_pointers_percentage <- box_scores$three_pointers_percentage/100
+box_scores$two_pointers_percentage <- box_scores$two_pointers_percentage/100
+```
+```{r}
+box_scores %>% group_by(season) %>%
+  summarise(Mean =mean(three_pointers_percentage))  %>%
+  ggplot() + geom_line(aes(x=season,y=Mean)) +
+  labs(title ="Average Percentage of Three Point Made per Season") +
+  scale_y_continuous(labels = percent_format())
+```
+
+```{r}
+box_scores %>% group_by(season) %>%
+  summarise(two_mean = mean(two_pointers_percentage)) %>%
+  ggplot() + geom_line(aes(x=season,y=two_mean)) +
+  labs(title ="Average Percentage of Two Point Made per Season") +
+  scale_y_continuous(labels = percent_format())
+```
